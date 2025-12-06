@@ -1,0 +1,167 @@
+\documentclass[10pt,twocolumn]{article}
+
+% ------------------------
+% PACKAGES
+% ------------------------
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{cite}
+\usepackage{hyperref}
+\usepackage{geometry}
+\usepackage{titlesec}
+\usepackage{lipsum}
+
+% Page margins
+\geometry{margin=0.75in}
+
+% Hyperlink setup
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    citecolor=blue,
+    urlcolor=blue
+}
+
+% Title formatting
+\titleformat{\section}{\large\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection}{1em}{}
+
+% ------------------------
+% TITLE
+% ------------------------
+\title{ \bfseries Title of Your Paper Goes Here \\[0.2cm]
+\large Identifying Key Species in a Food Web using Network Analysis}
+
+\author{
+    Yadder Joshua Aceituno González \\
+    Maastricht University \\
+    \texttt{Network Science}
+}
+
+\date{\today}
+
+% ------------------------
+% DOCUMENT
+% ------------------------
+\begin{document}
+
+\twocolumn[
+\maketitle
+\begin{abstract}
+Food webs represent the trophic interactions among species within an ecosystem. 
+This paper investigates methods for identifying key species using network analysis tools such as centrality metrics, trophic levels, and structural importance. 
+We apply these methods to a dataset obtained from iNaturalist to highlight the role of influential species within the community.
+\end{abstract}
+\vspace{0.5cm}
+]
+
+% ------------------------
+\section{Introduction}
+Food webs describe who eats whom in an ecosystem. Identifying key species helps ecologists understand ecosystem resilience, stability, and energy flow. 
+
+This paper explores network-theoretic methods to detect influential species, such as:
+\begin{itemize}
+    \item Degree centrality
+    \item Betweenness centrality
+    \item Keystone species detection
+    \item Community structure
+\end{itemize}
+
+% ------------------------
+\section{Background and Related Work}
+Provide ecological background: trophic levels, predator-prey dynamics, ecological networks.
+
+Cite prior work on network analysis in ecology.
+
+% ------------------------
+\section{Dataset}
+
+The data used in this paper comes from the iNaturalist project “Who Eats Whom”.
+This project collects predator and prey interactions that are uploaded by active users in the iNaturalist community. 
+To access the dataset, it is necessary to create an account on the platform.
+
+In total, the project contains nearly 13,000 observations, where each observation represents an interaction between two 
+species, one acting as the predator and the other as the prey.
+
+Before downloading the dataset, iNaturalist allows users to select the features they want to export.
+For this paper, we downloaded the following fields:
+
+\begin{itemize}
+\item Observation ID
+\item Scientific name of the species
+\item Common name of the species
+\item Taxon name
+\item Interaction type (whether the species is eating or being eaten)
+\item Partner species ID
+\end{itemize}
+
+Because the dataset does not provide much biological information beyond taxonomic identifiers, we created a script that queries the Gemini API to gather additional ecological attributes for each species.
+The information requested from the API included:
+
+\begin{itemize}
+\item Average weight of the species
+\item Average size of the species
+\item Diet classification (herbivore, carnivore, omnivore, insectivore)
+\item Average life span
+\item Typical habitats
+\item Continents where the species is commonly found
+\end{itemize}
+
+The original dataset from iNaturalist was mainly used to construct the food web and perform the first exploratory analyses.
+The augmented dataset, enriched with biological features from the Gemini API, allowed us to train a Graph Neural Network (GNN) that helped predict potential missing links in the food web.
+The details of this model and its performance are described in later sections.
+
+% ------------------------
+\section{Methods}
+Explain the network modeling approach:
+\begin{itemize}
+    \item Directed/undirected representation
+    \item Weighted or unweighted interactions
+    \item Defined metrics: degree, betweenness, PageRank, etc.
+\end{itemize}
+
+Optionally include equations:
+\[
+C_B(v) = \sum_{s \neq v \neq t} \frac{\sigma_{st}(v)}{\sigma_{st}}
+\]
+
+% ------------------------
+\section{Results}
+Include figures:
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.45\textwidth]{images/community_modules.png}
+    \caption{Community modules.}
+\end{figure}
+
+Summarize key findings:
+\begin{itemize}
+    \item Which species are most central?
+    \item Are there keystone species?
+\end{itemize}
+
+% ------------------------
+\section{Discussion}
+Interpret the results:
+\begin{itemize}
+    \item Ecological implications
+    \item Limitations of the dataset
+    \item Whether centrality = ecological importance?
+\end{itemize}
+
+% ------------------------
+\section{Conclusion}
+Summarize your goals and findings. Suggest future work, dataset improvements, or validation with field ecology.
+
+% ------------------------
+\section*{Acknowledgments}
+(Optional) Thank advisors, data providers, open-source tools.
+
+% ------------------------
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}
