@@ -32,8 +32,7 @@
 % ------------------------
 % TITLE
 % ------------------------
-\title{ \bfseries Title of Your Paper Goes Here \\[0.2cm]
-\large Identifying Key Species in a Food Web using Network Analysis}
+\title{ \bfseries Identifying Keystone Species in a Food Web}
 
 \author{
     Yadder Joshua Aceituno González \\
@@ -50,115 +49,252 @@
 
 \twocolumn[
 \maketitle
+
 \begin{abstract}
-Food webs represent the trophic interactions among species within an ecosystem. 
-This paper investigates methods for identifying key species using network analysis tools such as centrality metrics, trophic levels, and structural importance. 
-We apply these methods to a dataset obtained from iNaturalist to highlight the role of influential species within the community.
+Ecological networks, specifically food webs, provide a fundamental framework for understanding the stability and biodiversity of ecosystems. 
+This study investigates the structural properties of a predator-prey network constructed from the citizen-science project ``Who Eats Whom'' on iNaturalist. 
+By modeling interactions as a directed graph ($N=1,899$), we employ structural metrics, including degree centrality and motif analysis to identify keystone species. 
+Our results highlight the species ``Butterflies and Moths'' and ``Great Blue Heron'' as critical nodes for network cohesion. 
 \end{abstract}
+
 \vspace{0.5cm}
 ]
 
 % ------------------------
 \section{Introduction}
-Food webs describe who eats whom in an ecosystem. Identifying key species helps ecologists understand ecosystem resilience, stability, and energy flow. 
+Food webs act as roadmap of an ecosystem, describing the complex flow of energy from basal resources to predators. 
+Understanding the architecture of these networks is crucial for identifying keystone species whose removal would precipitate a 
+disproportionate collapse in ecosystem structure. While traditional ecological studies rely on localized field observations, 
+the rise of community science platforms has enabled the analysis of macro ecological patterns on a global scale.
 
-This paper explores network-theoretic methods to detect influential species, such as:
-\begin{itemize}
-    \item Degree centrality
-    \item Betweenness centrality
-    \item Keystone species detection
-    \item Community structure
-\end{itemize}
+This paper applies network methods to analyze a dataset sourced from iNaturalist, a massive citizen science initiative. 
+By representing species as nodes and predation events as directed edges, we aim to discover the mechanisms that govern ecosystem stability. 
+Specifically, we address three main objectives:
 
-% ------------------------
-\section{Background and Related Work}
-Provide ecological background: trophic levels, predator-prey dynamics, ecological networks.
-
-Cite prior work on network analysis in ecology.
+\begin{enumerate}
+    \item \textbf{Topological Characterization:} We quantify the structure of the food web using centrality metrics (Degree, Betweenness) to identify influential predator and prey taxa.
+    \item \textbf{Structural Motif Analysis:} We examine local interaction patterns, specifically tri-trophic food chains, to identify species serving as critical bridges for energy flow.
+    \item \textbf{Resilience Testing:} We assess the web robustness against biodiversity loss through simulated extinction cascades, comparing random removal strategies against targeted attacks on different levels.
+\end{enumerate}
 
 % ------------------------
 \section{Dataset}
 
-The data used in this paper comes from the iNaturalist project “Who Eats Whom”.
-This project collects predator and prey interactions that are uploaded by active users in the iNaturalist community. 
-To access the dataset, it is necessary to create an account on the platform.
+The primary dataset utilized in this study was sourced from the iNaturalist project "Who Eats Whom". This project collects predator-prey interactions 
+documented by users around the world. Access to the raw data was obtained via the platform's export functionality.
 
-In total, the project contains nearly 13,000 observations, where each observation represents an interaction between two 
-species, one acting as the predator and the other as the prey.
-
-Before downloading the dataset, iNaturalist allows users to select the features they want to export.
-For this paper, we downloaded the following fields:
+The dataset gathers approximately 13,000 observations. Each record denotes a binary interaction between two species, categorized respectively as 
+predator or prey. To facilitate analysis, the following specific attributes were extracted for each observation:
 
 \begin{itemize}
-\item Observation ID
-\item Scientific name of the species
-\item Common name of the species
-\item Taxon name
-\item Interaction type (whether the species is eating or being eaten)
-\item Partner species ID
+    \item Observation ID
+    \item Species Scientific Name
+    \item Species Common Name
+    \item Taxon Name
+    \item Interaction Type (Predator or Prey)
+    \item Partner Species ID (the species involved in the interaction)
 \end{itemize}
-
-Because the dataset does not provide much biological information beyond taxonomic identifiers, we created a script that queries the Gemini API to gather additional ecological attributes for each species.
-The information requested from the API included:
-
-\begin{itemize}
-\item Average weight of the species
-\item Average size of the species
-\item Diet classification (herbivore, carnivore, omnivore, insectivore)
-\item Average life span
-\item Typical habitats
-\item Continents where the species is commonly found
-\end{itemize}
-
-The original dataset from iNaturalist was mainly used to construct the food web and perform the first exploratory analyses.
-The augmented dataset, enriched with biological features from the Gemini API, allowed us to train a Graph Neural Network (GNN) that helped predict potential missing links in the food web.
-The details of this model and its performance are described in later sections.
 
 % ------------------------
-\section{Methods}
-Explain the network modeling approach:
+\section{Methodology}
+
+\subsection{Web Construction}
+Following data gathering step, we constructed a directed graph $G = (V, E)$ to represent the food web. 
+In this structure, the set of vertices $V$ represents distinct species, while the set of edges $E$ 
+represent species interactions. An edge $e_{ij}$ is directed from node $i$ (predator) to node $j$ (prey).
+
+\subsection{Centrality Measures and Keystone Species}
+To identify keystone species, we employed three primary network centrality metrics as defined by Newman \cite{newman2010networks}:
+
 \begin{itemize}
-    \item Directed/undirected representation
-    \item Weighted or unweighted interactions
-    \item Defined metrics: degree, betweenness, PageRank, etc.
+    \item \textbf{In-Degree:} Quantifies the number of predators consuming a specific species.
+    \item \textbf{Out-Degree:} Quantifies the number of distinct prey species a predator consumes.
+    \item \textbf{Betweenness Centrality:} Measures the frequency with which a node appears on the shortest paths between other species, these species act as a bridge for energy flow \cite{freeman1977set}.
 \end{itemize}
 
-Optionally include equations:
-\[
-C_B(v) = \sum_{s \neq v \neq t} \frac{\sigma_{st}(v)}{\sigma_{st}}
-\]
+\subsection{Motif Analysis: Community Modules}
+Beyond node metrics, we analyzed structural motifs to identify local interaction patterns. We adopted the "community module" framework proposed by Holt \cite{holt1997community}, which defines fundamental 
+sub-graph structures essential for understanding species dynamics within the web:
+
+\begin{enumerate}
+    \item \textbf{Food Chain:} A linear interaction ($A \rightarrow B \rightarrow C$).
+    \item \textbf{Apparent Competition:} A single predator shares two prey species ($B \leftarrow A \rightarrow C$).
+    \item \textbf{Exploitative Competition:} Two predators compete for a shared prey ($B \rightarrow A \leftarrow C$).
+    \item \textbf{Predation on Competing Prey:} A structure where a top predator consumes two intermediate species, which in turn compete for a shared prey ($B \leftarrow A \rightarrow C$ and $B \rightarrow D \leftarrow C$).
+    \item \textbf{Intraguild Predation:} A triangular motif where a predator consumes both a prey species and a competitor ($A \rightarrow B \rightarrow C$ and $A \rightarrow C$).
+\end{enumerate}
+
+\subsection{Extinction Cascades and Robustness}
+To assess the structural resilience of the food web, we simulated secondary extinction cascades triggered by the removal of identified key species, 
+following the methodology of Dunne et al. \cite{dunne2002network}. The simulation operates on a bottom-up dependency logic: following the removal 
+of a specific node, any species losing all of its prey is subsequently removed. We evaluated the network's stability by measuring changes 
+in robustness post-simulation.
 
 % ------------------------
+
 \section{Results}
-Include figures:
+
+\subsection{Analysis of the Largest Component}
+
+Following the network construction, the web showed a highly fragmented structure, comprising a total of 2,688 separated components. 
+The majority of these were isolated nodes or small interactions. This fragmentation is attributable to data ambiguities, 
+where observations lacked precise predator or prey attribution.
+
+To ensure robustness, we extracted the largest connected component for subsequent analysis. This component contains $N=1,899$ nodes, 
+representing approximately 70\% of the original network volume. Table \ref{tab:global_metrics} summarizes the structural metrics of this primary component.
+
+\begin{table}[h]
+    \centering
+    \caption{Structural metrics of the largest connected component.}
+    \label{tab:global_metrics}
+    \begin{tabular}{lc}
+        \hline
+        \textbf{Metric} & \textbf{Value} \\
+        \hline
+        Nodes ($N$) & 1,899 \\
+        Edges ($E$) & 2,313 \\
+        Connectance (Density) & 0.06\% \\
+        Average Degree ($k$) & 1.21 \\
+        Average Path Length ($L$) & 2.49 \\
+        \hline
+    \end{tabular}
+\end{table}
+
+The calculated connectance (density) of $0.06\%$ indicates a highly sparse network structure, a common characteristic of large-scale ecological networks \cite{dunne2002network}. 
+The low average degree ($ k \approx 1.21$) suggests that, on average, species in this dataset interact with very few species. 
+This sparsity is partly driven by the high prevalence of basal species (plants) which, by definition in this directed graph, have an out-degree of zero.
+
+To isolate the structural dynamics of higher species, we recalculated the average degree after excluding basal plants. This adjustment resulted in increase average degree 
+of $\langle k \rangle = 2.56$, indicating that species maintain interactions with approximately two to three other species.
+
+In the figure \ref{fig:food_web}, we visualize the food web structure of the largest component. The colors of the nodes represent the category that the species belongs to.
+We easily can notice how basal-plants (green nodes) appear everywhere in the food web, this indicates that they are food sources for different species. Also, some clusters 
+of predators and prey are clearly visible, highlighting the modular structure of the ecosystem.
+
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.45\textwidth]{images/community_modules.png}
-    \caption{Community modules.}
+    \includegraphics[width=0.4\textwidth]{images/food_web.png}
+    \caption{Food web visualization.}
+    \label{fig:food_web}
 \end{figure}
 
-Summarize key findings:
-\begin{itemize}
-    \item Which species are most central?
-    \item Are there keystone species?
-\end{itemize}
+\subsection{Identification of Keystone Species}
+
+Having established the web structure, we calculated node level metrics to identify potential keystone species. Figure \ref{fig:top5_species} illustrates 
+the top five species ranked by In-Degree and Out-Degree.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.4\textwidth]{images/top_degree.png}
+    \caption{Top 5 Species ranked by In-Degree (up) and Out-Degree (down).}
+    \label{fig:top5_species}
+\end{figure}
+
+\subsubsection{Prey Consumption (In-Degree)}
+Analysis of the In-Degree distribution identifies "Butterflies and Moths" as the most consumed species, with an in-degree of $k_{in}=47$. Three of the top five 
+identified prey nodes belong to the category \textit{Insecta}. This metric aligns with ecological expectations, as insects serve as resources for a diverse
+of predators, including arachnids, aves, and mammals.
+
+\subsubsection{Predator Dominance (Out-Degree)}
+In the other hand, the Out-Degree analysis highlights the "Great Blue Heron" as the dominant predator in the network, exhibiting an out-degree of $k_{out}=46$. 
+Similar to the prey distribution, the predator hierarchy is dominated by a specific category: three of the top five predators are members of the cateogry \textit{Aves} (Birds). 
+This result reflects the feeding strategies typical of many avian species, which often consume across multiple species, consuming fish, small mammals, and invertebrates.
+
+\subsubsection{Community Modules: The Food Chain Motif}
+
+The evaluation of motifs provides a complementary method for identifying keystone species. In this study, we specifically focused on the Food Chain motif ($A \to B \to C$). 
+This tri-node structure is critical as the intermediate species ($B$) functions as a obligated bridge between preys and predators.
+
+From a bio-energetic perspective, these bridge species are essential for vertical energy transfer. The removal of such species in the food web may damage the bottom-up propagation of energy. 
+
+Figure \ref{fig:critical_species} highlights the top five species that function as critical bridges in these chains. Specifically, these species support the highest number of obligated predators 
+that rely exclusively on that single species for sustenance. Consequently, the loss of these key species would guarantee the secondary extinction of the dependent predators.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.4\textwidth]{images/critical_species.png}
+    \caption{Top 5 Critical Bridge Species by Obligated Predator Count}
+    \label{fig:critical_species}
+\end{figure}
+
+\subsection{Network Robustness and Extinction Simulation}
+
+To evaluate the structural resilience of the food web, we simulated three extinction scenarios: (1) Random removal, (2) Targeted removal of top predators, and (3) Targeted removal of top prey species. 
+
+We quantified robustness using the metric $R$, defined as the area under the extinction curve \cite{dunne2002network}. In this framework, the theoretical maximum robustness is $R=0.50$, which  
+reflects the effect of secondary extinctions. Values closer to $0.50$ indicate high stability, while lower values imply rapid system collapse.
+
+\subsubsection{Scenario 1: Random Extinction}
+Figure \ref{fig:robustness_random} presents the results of the stochastic removal strategy. The network showed a robustness value of $R = 0.42$. This suggests that the food web maintains relative stability under random perturbations.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.4\textwidth]{images/random.png}
+    \caption{Network robustness under random species removal ($R=0.42$).}
+    \label{fig:robustness_random}
+\end{figure}
+
+\subsubsection{Scenario 2: Removal of Top Predators}
+In the second scenario, we simulated the targeted removal of top predators. As shown in Figure \ref{fig:out_degree}, this resulted in a expected high robustness value of $R = 0.46$, indicating minimal secondary extinctions. 
+
+This result highlights a limitation of the second cascade model. Since top predators generally do not serve as food sources for other species, their removal does not trigger "bottom-up" starvation cascades in this simulation. 
+However, ecologically, the loss of these keystone regulators would likely lead to "top-down" instability (e.g., prey overpopulation), a dynamic that requires dynamic population modeling rather than static structural analysis.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.4\textwidth]{images/out_degree.png}
+    \caption{Network robustness under targeted removal of top predators ($R=0.46$).}
+    \label{fig:out_degree}
+\end{figure}
+
+\subsubsection{Scenario 3: Removal of Top Preys}
+Finally, Figure \ref{fig:in_degree} illustrates the consequences of removing key prey species. This scenario proved the most damaging, yielding a significantly reduced robustness value of $R = 0.30$. 
+
+This drop confirms that the network is highly sensitive to the loss of important preys ("bottom-up" control). While the system exhibits higher stability than some comparable studies—which have reported values 
+as low as $R \approx 0.15$ for similar attacks, the 30\% reduction compared to the random baseline emphasizes the critical role of these consumed species.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.4\textwidth]{images/in_degree.png}
+    \caption{Network robustness under targeted removal of top prey species ($R=0.30$).}
+    \label{fig:in_degree}
+\end{figure}
 
 % ------------------------
+
 \section{Discussion}
-Interpret the results:
-\begin{itemize}
-    \item Ecological implications
-    \item Limitations of the dataset
-    \item Whether centrality = ecological importance?
-\end{itemize}
+
+A primary challenge encountered in this study was the inherent sparsity of the observational data. While individual records from the iNaturalist platform are well-documented, 
+they do not constitute a complete representation of the species' dynamics. This incompleteness is attributable to the nature of predation events; many predators exhibit elusive behavior, 
+making direct observation difficult. Consequently, the dataset is skewed towards species that are easy to observe, such as insects, arachnids, and plants, rather than elusive vertebrate predators..
+
+To mitigate the impact of missing links, a future work that could help is the implementation of a Graph Neural Network to infer latent interactions among species outside the largest component. 
+The efficacy of this link prediction task relies heavily on the quality of node embeddings. By enriching the food web with biological attributes such as body mass, size, habitat preference, 
+and dietary classification the GNN can learn  representations of species to accurately predict unobserved species relationships.
+
+Despite these data limitations, the application of node metrics (In-Degree, Out-Degree, and Betweenness Centrality) successfully identified critical species within the existing food web. 
+Our analysis highlighted "Butterflies and Moths" as the most significant prey resource, while the "Great Blue Heron" was identified as the dominant predator.
+
+Our simulations indicate that the targeted removal of keystone prey precipitates the most significant decline in network robustness. 
+However, despite this abrupt drop, the network maintained a higher degree of stability ($R=0.30$) compared to similar empirical studies, which often report values near $0.15$ 
+under identical attack strategies. This resilience is likely attributable to the fact the network is heavily populated by everywhere-groups, specifically insects, arachnids, and aves, which possess 
+high connectivity, allowing the system to absorb the loss of specific nodes without total collapse.
+
+Conversely, the predator removal simulations highlighted the limitations of purely structural analysis. While the structural integrity of the web appeared unaffected ($R=0.46$), 
+this static metric fails to account for "top-down" regulation. In biological reality, predators are essential for controlling prey populations. Their removal typically leads 
+to population growth among lower species, which can subsequently destabilize the ecosystem through resource depletion. Consequently, accurately modeling predator loss requires a 
+more complex simulation framework that incorporates node weights (population size) rather than simple connections.
 
 % ------------------------
-\section{Conclusion}
-Summarize your goals and findings. Suggest future work, dataset improvements, or validation with field ecology.
+\section{Conclusions}
 
-% ------------------------
-\section*{Acknowledgments}
-(Optional) Thank advisors, data providers, open-source tools.
+This research demonstrated the efficacy of network science in elucidating food web dynamics, allowing us to successfully identify keystone 
+species using established topological metrics. Our analysis specifically highlighted the critical role of insects and birds in maintaining 
+ecosystem stability, confirming that the removal of insect prey precipitates a significant decline in network robustness. 
+
+However, these findings must be interpreted within the context of data limitations; the sparsity of the dataset depicted in the 
+exclusion of numerous poorly connected species, a constraint that highlights the need for improved data completeness to enhance the 
+generalizability of future studies.
 
 % ------------------------
 \bibliographystyle{plain}

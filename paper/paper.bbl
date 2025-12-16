@@ -1,0 +1,23 @@
+\begin{thebibliography}{1}
+
+\bibitem{dunne2002network}
+Jennifer~A Dunne, Richard~J Williams, and Neo~D Martinez.
+\newblock Network structure and biodiversity loss in food webs: robustness increases with connectance.
+\newblock {\em Ecology Letters}, 2002.
+
+\bibitem{freeman1977set}
+Linton~C Freeman.
+\newblock A set of measures of centrality based on betweenness.
+\newblock {\em Sociometry}, pages 35--41, 1977.
+
+\bibitem{holt1997community}
+Robert~D Holt.
+\newblock Community modules.
+\newblock In {\em Multitrophic Interactions in Terrestrial Systems}, pages 333--349. Blackwell Science London, 1997.
+
+\bibitem{newman2010networks}
+Mark Newman.
+\newblock {\em Networks: An Introduction}.
+\newblock Oxford University Press, 2010.
+
+\end{thebibliography}
